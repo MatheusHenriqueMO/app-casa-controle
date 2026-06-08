@@ -1,0 +1,13 @@
+server:
+  port: 8080
+
+app:
+  firebase:
+    # Coloque o caminho para o arquivo de credenciais do Firebase
+    # Baixe em: Firebase Console > Configurações do Projeto > Contas de Serviço > Gerar nova chave privada
+    credentials-path: classpath:firebase-service-account.json
+
+spring:
+  web:
+    cors:
+      allowed-origins: "*"

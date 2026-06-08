@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Casas: apenas membros podem ler; qualquer autenticado pode criar
+    match /houses/{houseId} {
+      allow read: if request.auth != null
+                  && request.auth.uid in resource.data.memberIds;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null
+                    && request.auth.uid in resource.data.memberIds;
+      allow delete: if request.auth != null
+                    && request.auth.uid == resource.data.createdBy;
+    }
+
+    // Gastos: apenas membros da casa podem ler/criar
+    // Só quem pagou pode deletar
+    match /expenses/{expenseId} {
+      allow read: if request.auth != null
+                  && exists(/databases/$(database)/documents/houses/$(resource.data.houseId))
+                  && request.auth.uid in get(/databases/$(database)/documents/houses/$(resource.data.houseId)).data.memberIds;
+      allow create: if request.auth != null;
+      allow delete: if request.auth != null
+                    && request.auth.uid == resource.data.paidByUid;
+    }
+  }
+}

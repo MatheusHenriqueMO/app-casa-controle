@@ -1,0 +1,25 @@
+# Firebase credentials - NUNCA commitar
+backend/src/main/resources/firebase-service-account.json
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+
+# Flutter
+frontend/.dart_tool/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/build/
+frontend/.packages
+frontend/pubspec.lock
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

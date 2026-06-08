@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "953162567615",
+    "project_id": "casa-controle-c740a",
+    "storage_bucket": "casa-controle-c740a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:953162567615:android:7982c60f7e5008204a1b0a",
+        "android_client_info": {
+          "package_name": "com.example.frontend"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "953162567615-18t4a4bgjt6gkuvk26cfsbgdaedmkqrm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.frontend",
+            "certificate_hash": "9035ed2e3784e786e4846a660911b68ae4710e97"
+          }
+        },
+        {
+          "client_id": "953162567615-3jualdrj7bhgu6kcp6mdg1iubv8hsnt2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArMQM1xCDZqVWRNVv_U9ZuoWefY5jec7M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "953162567615-3jualdrj7bhgu6kcp6mdg1iubv8hsnt2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
