@@ -7,7 +7,7 @@ import 'auth_service.dart';
 
 class ApiService {
   // Troque pela URL do seu servidor em produção
-  static const String baseUrl = 'http://26.209.252.22:8080/api'; // PC local IP
+  static const String baseUrl = 'https://app-casa-controle-production.up.railway.app/api'; // Railway
   // static const String baseUrl = 'http://10.0.2.2:8080/api'; // Android emulator
   // static const String baseUrl = 'http://localhost:8080/api'; // iOS simulator
 
@@ -56,11 +56,13 @@ class ApiService {
     required String category,
     List<String>? splitWith,
     DateTime? date,
+    bool isFixed = false,
   }) async {
     final res = await _dio.post('/houses/$houseId/expenses', data: {
       'description': description,
       'amount': amount,
       'category': category,
+      'isFixed': isFixed,
       if (splitWith != null) 'splitWith': splitWith,
       if (date != null) 'date': date.toUtc().toIso8601String(),
     });

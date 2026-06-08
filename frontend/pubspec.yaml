@@ -9,11 +9,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   # Firebase
   firebase_core: ^2.24.0
   firebase_auth: ^4.15.0
-  google_sign_in: ^6.1.6
+  google_sign_in: 6.1.6
 
   # HTTP
   dio: ^5.4.0
@@ -21,10 +23,16 @@ dependencies:
   # State management
   provider: ^6.1.1
 
+  # Persistência local
+  shared_preferences: ^2.2.2
+
   # UI
   cupertino_icons: ^1.0.6
   fl_chart: ^0.66.0
   intl: ^0.19.0
+
+dependency_overrides:
+  google_sign_in_android: 6.1.15
 
 dev_dependencies:
   flutter_test:

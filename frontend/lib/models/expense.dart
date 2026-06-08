@@ -9,6 +9,7 @@ class Expense {
   final List<String> splitWith;
   final DateTime date;
   final DateTime createdAt;
+  final bool isFixed;
 
   Expense({
     required this.id,
@@ -21,6 +22,7 @@ class Expense {
     required this.splitWith,
     required this.date,
     required this.createdAt,
+    this.isFixed = false,
   });
 
   factory Expense.fromJson(Map<String, dynamic> json) {
@@ -35,6 +37,7 @@ class Expense {
       splitWith: List<String>.from(json['splitWith'] ?? []),
       date: DateTime.parse(json['date']),
       createdAt: DateTime.parse(json['createdAt']),
+      isFixed: json['isFixed'] == true,
     );
   }
 }

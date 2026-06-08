@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/house.dart';
 import '../../services/api_service.dart';
 import '../../services/auth_service.dart';
@@ -15,10 +15,38 @@ class HouseScreen extends StatefulWidget {
 
 class _HouseScreenState extends State<HouseScreen> {
   House? _house;
-  bool _loading = false;
+  bool _loading = true; // começa carregando para tentar restaurar a casa
 
   final _nameController = TextEditingController();
   final _codeController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreHouse();
+  }
+
+  Future<void> _restoreHouse() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedHouseId = prefs.getString('house_id');
+    if (savedHouseId != null) {
+      try {
+        final house = await context.read<ApiService>().getHouse(savedHouseId);
+        if (mounted) setState(() => _house = house);
+        return;
+      } catch (_) {
+        // casa não existe mais, limpa o cache
+        await prefs.remove('house_id');
+      }
+    }
+    if (mounted) setState(() => _loading = false);
+  }
+
+  Future<void> _saveHouse(House house) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('house_id', house.id);
+    setState(() => _house = house);
+  }
 
   Future<void> _createHouse() async {
     final name = _nameController.text.trim();
@@ -27,10 +55,9 @@ class _HouseScreenState extends State<HouseScreen> {
     setState(() => _loading = true);
     try {
       final house = await context.read<ApiService>().createHouse(name);
-      setState(() => _house = house);
+      await _saveHouse(house);
     } catch (e) {
       _showError('Erro ao criar casa: $e');
-    } finally {
       setState(() => _loading = false);
     }
   }
@@ -42,10 +69,9 @@ class _HouseScreenState extends State<HouseScreen> {
     setState(() => _loading = true);
     try {
       final house = await context.read<ApiService>().joinHouse(code);
-      setState(() => _house = house);
+      await _saveHouse(house);
     } catch (e) {
       _showError('Código inválido ou casa não encontrada');
-    } finally {
       setState(() => _loading = false);
     }
   }
@@ -66,7 +92,11 @@ class _HouseScreenState extends State<HouseScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => context.read<AuthService>().signOut(),
+            onPressed: () async {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.remove('house_id');
+              if (context.mounted) context.read<AuthService>().signOut();
+            },
           ),
         ],
       ),

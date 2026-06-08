@@ -21,6 +21,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   DateTime _selectedDate = DateTime.now();
   List<String>? _splitWith; // null = todos
   bool _loading = false;
+  bool _isFixed = false;
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -44,6 +45,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             category: _selectedCategory,
             splitWith: _splitWith,
             date: _selectedDate,
+            isFixed: _isFixed,
           );
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
@@ -108,6 +110,85 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 );
               }).toList(),
               onChanged: (v) => setState(() => _selectedCategory = v!),
+            ),
+            const SizedBox(height: 16),
+
+            // Tipo: fixo ou variável
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _isFixed = false),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: !_isFixed
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : Theme.of(context).colorScheme.surfaceContainerHighest,
+                        borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+                        border: Border.all(
+                          color: !_isFixed
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.grey.shade300,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(Icons.trending_up,
+                              color: !_isFixed
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.grey),
+                          const SizedBox(height: 4),
+                          Text('Variável',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: !_isFixed
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Colors.grey,
+                              )),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _isFixed = true),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _isFixed
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : Theme.of(context).colorScheme.surfaceContainerHighest,
+                        borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                        border: Border.all(
+                          color: _isFixed
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.grey.shade300,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(Icons.repeat,
+                              color: _isFixed
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.grey),
+                          const SizedBox(height: 4),
+                          Text('Fixo',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: _isFixed
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Colors.grey,
+                              )),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
 

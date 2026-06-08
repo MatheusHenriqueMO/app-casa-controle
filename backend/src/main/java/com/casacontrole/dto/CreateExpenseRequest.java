@@ -24,4 +24,6 @@ public class CreateExpenseRequest {
     private List<String> splitWith; // null = divide com todos
 
     private Instant date; // null = agora
+
+    private boolean isFixed; // true = gasto fixo, false = variável
 }

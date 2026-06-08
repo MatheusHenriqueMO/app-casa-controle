@@ -58,6 +58,7 @@ public class ExpenseService {
         data.put("splitWith", splitWith);
         data.put("date", date.toString());
         data.put("createdAt", Instant.now().toString());
+        data.put("isFixed", request.isFixed());
 
         DocumentReference ref = db().collection(COLLECTION).document();
         ref.set(data).get();
@@ -219,6 +220,7 @@ public class ExpenseService {
                 .splitWith((List<String>) doc.get("splitWith"))
                 .date(Instant.parse(Objects.requireNonNull(doc.getString("date"))))
                 .createdAt(Instant.parse(Objects.requireNonNull(doc.getString("createdAt"))))
+                .isFixed(Boolean.TRUE.equals(doc.getBoolean("isFixed")))
                 .build();
     }
 }

@@ -24,4 +24,5 @@ public class Expense {
     private List<String> splitWith;  // uids que dividem (null = todos da casa)
     private Instant date;
     private Instant createdAt;
+    private boolean isFixed; // true = gasto fixo, false = variável
 }

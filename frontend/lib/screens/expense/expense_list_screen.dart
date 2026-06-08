@@ -6,6 +6,7 @@ import '../../models/expense.dart';
 import '../../models/house.dart';
 import '../../services/api_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/theme_service.dart';
 import '../dashboard/dashboard_screen.dart';
 import 'add_expense_screen.dart';
 
@@ -97,6 +98,13 @@ class _ExpenseListScreenState extends State<ExpenseListScreen> {
           ],
         ),
         actions: [
+          Consumer<ThemeService>(
+            builder: (context, themeService, _) => IconButton(
+              icon: Icon(themeService.isDark ? Icons.light_mode : Icons.dark_mode),
+              tooltip: themeService.isDark ? 'Tema claro' : 'Tema escuro',
+              onPressed: themeService.toggle,
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.copy),
             tooltip: 'Copiar código',
@@ -221,9 +229,35 @@ class _ExpenseListScreenState extends State<ExpenseListScreen> {
                                       color: isOwn ? colors.primary : colors.onSurface,
                                     ),
                                   ),
-                                  Text(
-                                    expense.category,
-                                    style: const TextStyle(fontSize: 11),
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        expense.category,
+                                        style: const TextStyle(fontSize: 11),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                        decoration: BoxDecoration(
+                                          color: expense.isFixed
+                                              ? colors.secondaryContainer
+                                              : colors.tertiaryContainer,
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          expense.isFixed ? 'Fixo' : 'Variável',
+                                          style: TextStyle(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                            color: expense.isFixed
+                                                ? colors.onSecondaryContainer
+                                                : colors.onTertiaryContainer,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
