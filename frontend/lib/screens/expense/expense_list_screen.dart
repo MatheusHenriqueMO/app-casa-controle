@@ -222,73 +222,83 @@ class _ExpenseListScreenState extends State<ExpenseListScreen> {
                           final isOwn = expense.paidByUid == currentUid;
 
                           return Card(
-                            child: ListTile(
-                              leading: Text(icon, style: const TextStyle(fontSize: 28)),
-                              title: Text(expense.description),
-                              subtitle: Text(
-                                '${expense.paidByName} · ${DateFormat('dd/MM').format(expense.date)}',
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              child: Row(
                                 children: [
+                                  Text(icon, style: const TextStyle(fontSize: 26)),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          expense.description,
+                                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          '${expense.paidByName} · ${DateFormat('dd/MM').format(expense.date)}',
+                                          style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Text(expense.category, style: TextStyle(fontSize: 11, color: colors.onSurfaceVariant)),
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: expense.isFixed ? colors.secondaryContainer : colors.tertiaryContainer,
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: Text(
+                                                expense.isFixed ? 'Fixo' : 'Variável',
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: expense.isFixed ? colors.onSecondaryContainer : colors.onTertiaryContainer,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
                                   Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       Text(
                                         'R\$ ${expense.amount.toStringAsFixed(2)}',
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
+                                          fontSize: 14,
                                           color: isOwn ? colors.primary : colors.onSurface,
                                         ),
                                       ),
-                                      const SizedBox(height: 2),
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(expense.category, style: const TextStyle(fontSize: 11)),
-                                          const SizedBox(width: 4),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                            decoration: BoxDecoration(
-                                              color: expense.isFixed
-                                                  ? colors.secondaryContainer
-                                                  : colors.tertiaryContainer,
-                                              borderRadius: BorderRadius.circular(4),
-                                            ),
-                                            child: Text(
-                                              expense.isFixed ? 'Fixo' : 'Variável',
-                                              style: TextStyle(
-                                                fontSize: 9,
-                                                fontWeight: FontWeight.bold,
-                                                color: expense.isFixed
-                                                    ? colors.onSecondaryContainer
-                                                    : colors.onTertiaryContainer,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                      if (isOwn)
+                                        PopupMenuButton<String>(
+                                          icon: Icon(Icons.more_vert, size: 18, color: colors.onSurfaceVariant),
+                                          padding: EdgeInsets.zero,
+                                          onSelected: (value) {
+                                            if (value == 'edit') _editExpense(expense);
+                                            if (value == 'delete') _deleteExpense(expense);
+                                          },
+                                          itemBuilder: (_) => const [
+                                            PopupMenuItem(value: 'edit', child: Row(
+                                              children: [Icon(Icons.edit, size: 18), SizedBox(width: 8), Text('Editar')],
+                                            )),
+                                            PopupMenuItem(value: 'delete', child: Row(
+                                              children: [Icon(Icons.delete, size: 18, color: Colors.red), SizedBox(width: 8), Text('Excluir', style: TextStyle(color: Colors.red))],
+                                            )),
+                                          ],
+                                        )
+                                      else
+                                        const SizedBox(height: 24),
                                     ],
                                   ),
-                                  if (isOwn) ...[
-                                    const SizedBox(width: 4),
-                                    PopupMenuButton<String>(
-                                      icon: const Icon(Icons.more_vert, size: 20),
-                                      onSelected: (value) {
-                                        if (value == 'edit') _editExpense(expense);
-                                        if (value == 'delete') _deleteExpense(expense);
-                                      },
-                                      itemBuilder: (_) => const [
-                                        PopupMenuItem(value: 'edit', child: Row(
-                                          children: [Icon(Icons.edit, size: 18), SizedBox(width: 8), Text('Editar')],
-                                        )),
-                                        PopupMenuItem(value: 'delete', child: Row(
-                                          children: [Icon(Icons.delete, size: 18, color: Colors.red), SizedBox(width: 8), Text('Excluir', style: TextStyle(color: Colors.red))],
-                                        )),
-                                      ],
-                                    ),
-                                  ],
                                 ],
                               ),
                             ),
