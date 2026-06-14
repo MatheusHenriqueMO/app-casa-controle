@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/balance_summary.dart';
 import '../../models/house.dart';
+import '../../models/payment.dart';
 import '../../services/api_service.dart';
+import '../../services/auth_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   final House house;
@@ -16,6 +18,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   BalanceSummary? _summary;
+  List<Payment> _payments = [];
   bool _loading = true;
   DateTime _selectedMonth = DateTime.now();
 
@@ -28,14 +31,63 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadSummary() async {
     setState(() => _loading = true);
     try {
-      final summary = await context.read<ApiService>().getSummary(
-            widget.house.id,
-            year: _selectedMonth.year,
-            month: _selectedMonth.month,
-          );
-      setState(() => _summary = summary);
+      final api = context.read<ApiService>();
+      final results = await Future.wait([
+        api.getSummary(widget.house.id, year: _selectedMonth.year, month: _selectedMonth.month),
+        api.listPayments(widget.house.id, year: _selectedMonth.year, month: _selectedMonth.month),
+      ]);
+      setState(() {
+        _summary = results[0] as BalanceSummary;
+        _payments = results[1] as List<Payment>;
+      });
     } finally {
       setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _confirmPayment(DebtSettlement settlement) async {
+    final currentUid = context.read<AuthService>().currentUser?.uid;
+    if (currentUid != settlement.fromUid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Só quem deve pode confirmar o pagamento')),
+      );
+      return;
+    }
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirmar pagamento?'),
+        content: Text(
+          'Confirmar que ${settlement.fromName} pagou R\$ ${settlement.amount.toStringAsFixed(2)} para ${settlement.toName}?',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Confirmar')),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      try {
+        await context.read<ApiService>().createPayment(
+              houseId: widget.house.id,
+              toUid: settlement.toUid,
+              amount: settlement.amount,
+            );
+        await _loadSummary();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Pagamento confirmado!')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erro: $e')),
+          );
+        }
+      }
     }
   }
 
@@ -83,6 +135,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildContent(ColorScheme colors) {
     final s = _summary!;
+    final currentUid = context.read<AuthService>().currentUser?.uid;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -161,18 +214,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }),
         const SizedBox(height: 16),
 
-        // Acertos
+        // Acertos pendentes
+        Text('Acertos necessários', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
         if (s.settlements.isNotEmpty) ...[
-          Text('Acertos necessários', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
           ...s.settlements.map((d) => Card(
             color: colors.errorContainer.withOpacity(0.3),
             child: ListTile(
               leading: const Icon(Icons.swap_horiz),
               title: Text('${d.fromName} → ${d.toName}'),
-              trailing: Text(
-                'R\$ ${d.amount.toStringAsFixed(2)}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+              subtitle: currentUid == d.fromUid
+                  ? const Text('Você deve pagar')
+                  : null,
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'R\$ ${d.amount.toStringAsFixed(2)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  if (currentUid == d.fromUid) ...[
+                    const SizedBox(width: 8),
+                    FilledButton.tonal(
+                      onPressed: () => _confirmPayment(d),
+                      child: const Text('Pagar'),
+                    ),
+                  ],
+                ],
               ),
             ),
           )),
@@ -184,6 +252,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
               title: Text('Tudo certo! Sem acertos necessários.'),
             ),
           ),
+        const SizedBox(height: 16),
+
+        // Pagamentos confirmados do mês
+        if (_payments.isNotEmpty) ...[
+          Text('Acertos realizados', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          ..._payments.map((p) => Card(
+            color: Colors.green.withOpacity(0.08),
+            child: ListTile(
+              leading: const Icon(Icons.check_circle_outline, color: Colors.green),
+              title: Text('${p.fromName} → ${p.toName}'),
+              subtitle: Text(DateFormat('dd/MM/yyyy').format(p.date)),
+              trailing: Text(
+                'R\$ ${p.amount.toStringAsFixed(2)}',
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+              ),
+            ),
+          )),
+        ],
       ],
     );
   }

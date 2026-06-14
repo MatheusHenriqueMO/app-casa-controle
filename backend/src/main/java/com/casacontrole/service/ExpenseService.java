@@ -110,11 +110,13 @@ public class ExpenseService {
     }
 
     public BalanceSummary getSummary(String houseId, FirebaseUserDetails user,
-                                     int year, int month)
+                                     int year, int month,
+                                     PaymentService paymentService)
             throws ExecutionException, InterruptedException {
 
         House house = houseService.getHouse(houseId, user.getUid());
         List<Expense> expenses = listExpenses(houseId, user, year, month);
+        List<com.casacontrole.model.Payment> payments = paymentService.listPayments(houseId, user, year, month);
 
         BigDecimal totalMonth = BigDecimal.ZERO;
         Map<String, BigDecimal> totalByCategory = new HashMap<>();
@@ -153,6 +155,14 @@ public class ExpenseService {
             BigDecimal paid = paidByMember.getOrDefault(uid, BigDecimal.ZERO);
             BigDecimal owed = owedByMember.getOrDefault(uid, BigDecimal.ZERO);
             balance.put(uid, paid.subtract(owed));
+        }
+
+        // Descontar pagamentos já realizados
+        for (com.casacontrole.model.Payment payment : payments) {
+            // quem pagou aumenta seu saldo (como se tivesse "recebido" o que era devido)
+            balance.merge(payment.getFromUid(), payment.getAmount(), BigDecimal::add);
+            // quem recebeu diminui seu saldo
+            balance.merge(payment.getToUid(), payment.getAmount().negate(), BigDecimal::add);
         }
 
         List<BalanceSummary.DebtSettlement> settlements = calculateSettlements(balance, house.getMemberNames());

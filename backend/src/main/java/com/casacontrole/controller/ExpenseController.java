@@ -5,6 +5,7 @@ import com.casacontrole.dto.CreateExpenseRequest;
 import com.casacontrole.model.Expense;
 import com.casacontrole.security.FirebaseUserDetails;
 import com.casacontrole.service.ExpenseService;
+import com.casacontrole.service.PaymentService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,9 +20,11 @@ import java.util.concurrent.ExecutionException;
 public class ExpenseController {
 
     private final ExpenseService expenseService;
+    private final PaymentService paymentService;
 
-    public ExpenseController(ExpenseService expenseService) {
+    public ExpenseController(ExpenseService expenseService, PaymentService paymentService) {
         this.expenseService = expenseService;
+        this.paymentService = paymentService;
     }
 
     @PostMapping
@@ -58,6 +61,6 @@ public class ExpenseController {
             @AuthenticationPrincipal FirebaseUserDetails user) throws ExecutionException, InterruptedException {
         int y = year != null ? year : LocalDate.now().getYear();
         int m = month != null ? month : LocalDate.now().getMonthValue();
-        return ResponseEntity.ok(expenseService.getSummary(houseId, user, y, m));
+        return ResponseEntity.ok(expenseService.getSummary(houseId, user, y, m, paymentService));
     }
 }

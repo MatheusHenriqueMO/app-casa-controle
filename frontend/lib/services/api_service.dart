@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../models/house.dart';
 import '../models/expense.dart';
 import '../models/balance_summary.dart';
+import '../models/payment.dart';
 import 'auth_service.dart';
 
 class ApiService {
@@ -79,6 +80,27 @@ class ApiService {
 
   Future<void> deleteExpense(String houseId, String expenseId) async {
     await _dio.delete('/houses/$houseId/expenses/$expenseId');
+  }
+
+  Future<Payment> createPayment({
+    required String houseId,
+    required String toUid,
+    required double amount,
+  }) async {
+    final res = await _dio.post('/houses/$houseId/payments', data: {
+      'toUid': toUid,
+      'amount': amount,
+    });
+    return Payment.fromJson(res.data);
+  }
+
+  Future<List<Payment>> listPayments(String houseId, {int? year, int? month}) async {
+    final now = DateTime.now();
+    final res = await _dio.get('/houses/$houseId/payments', queryParameters: {
+      'year': year ?? now.year,
+      'month': month ?? now.month,
+    });
+    return (res.data as List).map((e) => Payment.fromJson(e)).toList();
   }
 
   Future<BalanceSummary> getSummary(String houseId, {int? year, int? month}) async {
