@@ -7,7 +7,9 @@ import '../../services/api_service.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   final House house;
-  const AddExpenseScreen({super.key, required this.house});
+  final Expense? expense; // não nulo = modo edição
+
+  const AddExpenseScreen({super.key, required this.house, this.expense});
 
   @override
   State<AddExpenseScreen> createState() => _AddExpenseScreenState();
@@ -15,13 +17,31 @@ class AddExpenseScreen extends StatefulWidget {
 
 class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _descriptionController = TextEditingController();
-  final _amountController = TextEditingController();
-  String _selectedCategory = kCategories.first;
-  DateTime _selectedDate = DateTime.now();
-  List<String>? _splitWith; // null = todos
+  late final TextEditingController _descriptionController;
+  late final TextEditingController _amountController;
+  late String _selectedCategory;
+  late DateTime _selectedDate;
+  List<String>? _splitWith;
   bool _loading = false;
-  bool _isFixed = false;
+  late bool _isFixed;
+
+  bool get _isEditing => widget.expense != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.expense;
+    _descriptionController = TextEditingController(text: e?.description ?? '');
+    _amountController = TextEditingController(
+      text: e != null ? e.amount.toStringAsFixed(2) : '',
+    );
+    _selectedCategory = e?.category ?? kCategories.first;
+    _selectedDate = e?.date ?? DateTime.now();
+    _isFixed = e?.isFixed ?? false;
+    if (e != null && e.splitWith.isNotEmpty) {
+      _splitWith = List.from(e.splitWith);
+    }
+  }
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -38,15 +58,32 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
     setState(() => _loading = true);
     try {
-      await context.read<ApiService>().createExpense(
-            houseId: widget.house.id,
-            description: _descriptionController.text.trim(),
-            amount: double.parse(_amountController.text.replaceAll(',', '.')),
-            category: _selectedCategory,
-            splitWith: _splitWith,
-            date: _selectedDate,
-            isFixed: _isFixed,
-          );
+      final api = context.read<ApiService>();
+      final description = _descriptionController.text.trim();
+      final amount = double.parse(_amountController.text.replaceAll(',', '.'));
+
+      if (_isEditing) {
+        await api.updateExpense(
+          houseId: widget.house.id,
+          expenseId: widget.expense!.id,
+          description: description,
+          amount: amount,
+          category: _selectedCategory,
+          splitWith: _splitWith,
+          date: _selectedDate,
+          isFixed: _isFixed,
+        );
+      } else {
+        await api.createExpense(
+          houseId: widget.house.id,
+          description: description,
+          amount: amount,
+          category: _selectedCategory,
+          splitWith: _splitWith,
+          date: _selectedDate,
+          isFixed: _isFixed,
+        );
+      }
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
@@ -62,7 +99,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Novo gasto')),
+      appBar: AppBar(title: Text(_isEditing ? 'Editar gasto' : 'Novo gasto')),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -224,7 +261,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           child: Text(
                             _splitWith == null ? '✓ Todos' : 'Todos',
                             style: TextStyle(
-                              color: _splitWith == null ? Theme.of(context).colorScheme.primary : null,
+                              color: _splitWith == null
+                                  ? Theme.of(context).colorScheme.primary
+                                  : null,
                             ),
                           ),
                         ),
@@ -263,10 +302,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               onPressed: _loading ? null : _submit,
               child: _loading
                   ? const SizedBox(
-                      height: 20, width: 20,
+                      height: 20,
+                      width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
-                  : const Text('Salvar gasto'),
+                  : Text(_isEditing ? 'Salvar alterações' : 'Salvar gasto'),
             ),
           ],
         ),

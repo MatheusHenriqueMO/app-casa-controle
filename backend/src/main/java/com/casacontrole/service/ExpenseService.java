@@ -2,6 +2,7 @@ package com.casacontrole.service;
 
 import com.casacontrole.dto.BalanceSummary;
 import com.casacontrole.dto.CreateExpenseRequest;
+import com.casacontrole.dto.UpdateExpenseRequest;
 import com.casacontrole.model.Expense;
 import com.casacontrole.model.House;
 import com.casacontrole.security.FirebaseUserDetails;
@@ -93,6 +94,37 @@ public class ExpenseService {
 
         expenses.sort(Comparator.comparing(Expense::getDate).reversed());
         return expenses;
+    }
+
+    public Expense updateExpense(String houseId, String expenseId,
+                                 UpdateExpenseRequest request, FirebaseUserDetails user)
+            throws ExecutionException, InterruptedException {
+
+        House house = houseService.getHouse(houseId, user.getUid());
+        DocumentSnapshot doc = db().collection(COLLECTION).document(expenseId).get().get();
+
+        if (!doc.exists()) throw new NoSuchElementException("Gasto não encontrado");
+        if (!user.getUid().equals(doc.getString("paidByUid"))) {
+            throw new SecurityException("Só quem criou pode editar");
+        }
+
+        List<String> splitWith = request.getSplitWith();
+        if (splitWith == null || splitWith.isEmpty()) {
+            splitWith = house.getMemberIds();
+        }
+
+        Instant date = request.getDate() != null ? request.getDate() : Instant.now();
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("description", request.getDescription());
+        data.put("amount", request.getAmount().toString());
+        data.put("category", request.getCategory());
+        data.put("splitWith", splitWith);
+        data.put("date", date.toString());
+        data.put("isFixed", request.isFixed());
+
+        doc.getReference().update(data).get();
+        return toExpense(doc.getReference().get().get());
     }
 
     public void deleteExpense(String houseId, String expenseId, FirebaseUserDetails user)

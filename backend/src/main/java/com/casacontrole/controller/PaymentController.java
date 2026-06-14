@@ -31,6 +31,15 @@ public class PaymentController {
         return ResponseEntity.ok(paymentService.createPayment(houseId, request, user));
     }
 
+    @DeleteMapping("/{paymentId}")
+    public ResponseEntity<Void> deletePayment(
+            @PathVariable String houseId,
+            @PathVariable String paymentId,
+            @AuthenticationPrincipal FirebaseUserDetails user) throws ExecutionException, InterruptedException {
+        paymentService.deletePayment(houseId, paymentId, user);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping
     public ResponseEntity<List<Payment>> listPayments(
             @PathVariable String houseId,

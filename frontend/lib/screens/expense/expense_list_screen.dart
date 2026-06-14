@@ -46,6 +46,16 @@ class _ExpenseListScreenState extends State<ExpenseListScreen> {
     }
   }
 
+  Future<void> _editExpense(Expense expense) async {
+    final updated = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddExpenseScreen(house: widget.house, expense: expense),
+      ),
+    );
+    if (updated == true) _loadExpenses();
+  }
+
   Future<void> _deleteExpense(Expense expense) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -218,50 +228,69 @@ class _ExpenseListScreenState extends State<ExpenseListScreen> {
                               subtitle: Text(
                                 '${expense.paidByName} · ${DateFormat('dd/MM').format(expense.date)}',
                               ),
-                              trailing: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.end,
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(
-                                    'R\$ ${expense.amount.toStringAsFixed(2)}',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: isOwn ? colors.primary : colors.onSurface,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       Text(
-                                        expense.category,
-                                        style: const TextStyle(fontSize: 11),
+                                        'R\$ ${expense.amount.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: isOwn ? colors.primary : colors.onSurface,
+                                        ),
                                       ),
-                                      const SizedBox(width: 4),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                        decoration: BoxDecoration(
-                                          color: expense.isFixed
-                                              ? colors.secondaryContainer
-                                              : colors.tertiaryContainer,
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          expense.isFixed ? 'Fixo' : 'Variável',
-                                          style: TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: FontWeight.bold,
-                                            color: expense.isFixed
-                                                ? colors.onSecondaryContainer
-                                                : colors.onTertiaryContainer,
+                                      const SizedBox(height: 2),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(expense.category, style: const TextStyle(fontSize: 11)),
+                                          const SizedBox(width: 4),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                            decoration: BoxDecoration(
+                                              color: expense.isFixed
+                                                  ? colors.secondaryContainer
+                                                  : colors.tertiaryContainer,
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              expense.isFixed ? 'Fixo' : 'Variável',
+                                              style: TextStyle(
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.bold,
+                                                color: expense.isFixed
+                                                    ? colors.onSecondaryContainer
+                                                    : colors.onTertiaryContainer,
+                                              ),
+                                            ),
                                           ),
-                                        ),
+                                        ],
                                       ),
                                     ],
                                   ),
+                                  if (isOwn) ...[
+                                    const SizedBox(width: 4),
+                                    PopupMenuButton<String>(
+                                      icon: const Icon(Icons.more_vert, size: 20),
+                                      onSelected: (value) {
+                                        if (value == 'edit') _editExpense(expense);
+                                        if (value == 'delete') _deleteExpense(expense);
+                                      },
+                                      itemBuilder: (_) => const [
+                                        PopupMenuItem(value: 'edit', child: Row(
+                                          children: [Icon(Icons.edit, size: 18), SizedBox(width: 8), Text('Editar')],
+                                        )),
+                                        PopupMenuItem(value: 'delete', child: Row(
+                                          children: [Icon(Icons.delete, size: 18, color: Colors.red), SizedBox(width: 8), Text('Excluir', style: TextStyle(color: Colors.red))],
+                                        )),
+                                      ],
+                                    ),
+                                  ],
                                 ],
                               ),
-                              onLongPress: isOwn ? () => _deleteExpense(expense) : null,
                             ),
                           );
                         },

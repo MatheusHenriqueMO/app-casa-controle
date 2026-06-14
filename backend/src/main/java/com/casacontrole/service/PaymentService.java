@@ -77,6 +77,20 @@ public class PaymentService {
                 .collect(Collectors.toList());
     }
 
+    public void deletePayment(String houseId, String paymentId, FirebaseUserDetails user)
+            throws ExecutionException, InterruptedException {
+
+        houseService.getHouse(houseId, user.getUid());
+        DocumentSnapshot doc = db().collection(COLLECTION).document(paymentId).get().get();
+
+        if (!doc.exists()) throw new NoSuchElementException("Pagamento não encontrado");
+        if (!user.getUid().equals(doc.getString("fromUid"))) {
+            throw new SecurityException("Só quem fez o pagamento pode desfazê-lo");
+        }
+
+        doc.getReference().delete().get();
+    }
+
     private Payment toPayment(DocumentSnapshot doc) {
         return Payment.builder()
                 .id(doc.getId())

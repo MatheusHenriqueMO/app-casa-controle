@@ -78,6 +78,27 @@ class ApiService {
     return (res.data as List).map((e) => Expense.fromJson(e)).toList();
   }
 
+  Future<Expense> updateExpense({
+    required String houseId,
+    required String expenseId,
+    required String description,
+    required double amount,
+    required String category,
+    List<String>? splitWith,
+    DateTime? date,
+    bool isFixed = false,
+  }) async {
+    final res = await _dio.put('/houses/$houseId/expenses/$expenseId', data: {
+      'description': description,
+      'amount': amount,
+      'category': category,
+      'isFixed': isFixed,
+      if (splitWith != null) 'splitWith': splitWith,
+      if (date != null) 'date': date.toUtc().toIso8601String(),
+    });
+    return Expense.fromJson(res.data);
+  }
+
   Future<void> deleteExpense(String houseId, String expenseId) async {
     await _dio.delete('/houses/$houseId/expenses/$expenseId');
   }
@@ -92,6 +113,10 @@ class ApiService {
       'amount': amount,
     });
     return Payment.fromJson(res.data);
+  }
+
+  Future<void> deletePayment(String houseId, String paymentId) async {
+    await _dio.delete('/houses/$houseId/payments/$paymentId');
   }
 
   Future<List<Payment>> listPayments(String houseId, {int? year, int? month}) async {

@@ -45,6 +45,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Future<void> _undoPayment(Payment payment) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Desfazer pagamento?'),
+        content: Text('Desfazer o acerto de R\$ ${payment.amount.toStringAsFixed(2)} para ${payment.toName}?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Desfazer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      try {
+        await context.read<ApiService>().deletePayment(widget.house.id, payment.id);
+        await _loadSummary();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Pagamento desfeito')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro: $e')));
+        }
+      }
+    }
+  }
+
   Future<void> _confirmPayment(DebtSettlement settlement) async {
     final currentUid = context.read<AuthService>().currentUser?.uid;
     if (currentUid != settlement.fromUid) {
@@ -264,9 +298,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
               leading: const Icon(Icons.check_circle_outline, color: Colors.green),
               title: Text('${p.fromName} → ${p.toName}'),
               subtitle: Text(DateFormat('dd/MM/yyyy').format(p.date)),
-              trailing: Text(
-                'R\$ ${p.amount.toStringAsFixed(2)}',
-                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'R\$ ${p.amount.toStringAsFixed(2)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+                  ),
+                  if (currentUid == p.fromUid) ...[
+                    const SizedBox(width: 4),
+                    IconButton(
+                      icon: const Icon(Icons.undo, size: 20),
+                      tooltip: 'Desfazer',
+                      onPressed: () => _undoPayment(p),
+                    ),
+                  ],
+                ],
               ),
             ),
           )),

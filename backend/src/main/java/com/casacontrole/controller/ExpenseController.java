@@ -2,6 +2,7 @@ package com.casacontrole.controller;
 
 import com.casacontrole.dto.BalanceSummary;
 import com.casacontrole.dto.CreateExpenseRequest;
+import com.casacontrole.dto.UpdateExpenseRequest;
 import com.casacontrole.model.Expense;
 import com.casacontrole.security.FirebaseUserDetails;
 import com.casacontrole.service.ExpenseService;
@@ -42,6 +43,15 @@ public class ExpenseController {
             @RequestParam(required = false) Integer month,
             @AuthenticationPrincipal FirebaseUserDetails user) throws ExecutionException, InterruptedException {
         return ResponseEntity.ok(expenseService.listExpenses(houseId, user, year, month));
+    }
+
+    @PutMapping("/{expenseId}")
+    public ResponseEntity<Expense> updateExpense(
+            @PathVariable String houseId,
+            @PathVariable String expenseId,
+            @Valid @RequestBody UpdateExpenseRequest request,
+            @AuthenticationPrincipal FirebaseUserDetails user) throws ExecutionException, InterruptedException {
+        return ResponseEntity.ok(expenseService.updateExpense(houseId, expenseId, request, user));
     }
 
     @DeleteMapping("/{expenseId}")
